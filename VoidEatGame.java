@@ -1,6 +1,7 @@
 package game;
 
 import java.awt.Color;
+
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JOptionPane;
+import java.awt.Container;
 
 
 import javax.sound.sampled.AudioInputStream;
@@ -22,7 +24,13 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 
+
+/*
+ * 1. 타이머로 종료되게
+ * 2. 벌은 먹으면 점수 줄어들기
+ * 3. 먹으면 아이템도 등장하고 싶음*/
 public class VoidEatGame extends JFrame {
 	private Image bufferImage;
 	private Graphics screenGraphic;
@@ -37,7 +45,8 @@ public class VoidEatGame extends JFrame {
 	private Image coin2 = new ImageIcon("src/images/orange2.png").getImage();
 	private Image coin3 = new ImageIcon("src/images/orange3.png").getImage();
 	private Image coin4 = new ImageIcon("src/images/orange4.png").getImage();
-	private Image bee = new ImageIcon("src/images/bee.png").getImage();
+	private Image bee = new ImageIcon("src/images/bee.png").getImage(); //이것은 함정
+	//속도 올리는것. 
 	
 	private int playerX, playerY;	// 플레이어 위치
 	private int playerWidth = player.getWidth(null);
@@ -61,8 +70,6 @@ public class VoidEatGame extends JFrame {
 	//int i1=i++;
 	
 	private boolean up, down, left, right;	// 키 눌림
-	
-
 	
 	public VoidEatGame() {
 		setTitle("음식 먹기 게임");
@@ -138,10 +145,10 @@ public class VoidEatGame extends JFrame {
 	}
 	
 	public void keyProcess() {
-		if (up && playerY - 3 > 30) playerY-=3*2;
-		if (down && playerY + playerHeight + 3 < 600) playerY+=3*2;
-		if (left && playerX - 3 > 0) playerX-=3*2;
-		if (right && playerX + playerWidth + 3 < 600) playerX+=3*2;
+		if (up && playerY - 3 > 30) playerY-=3*3;
+		if (down && playerY + playerHeight + 3 < 600) playerY+=3*3;
+		if (left && playerX - 3 > 0) playerX-=3*3;
+		if (right && playerX + playerWidth + 3 < 600) playerX+=3*3;
 	}	// 플레이어 움직임
 	
 	public void crashCheck() {
@@ -222,6 +229,28 @@ public class VoidEatGame extends JFrame {
 		};
 		t.schedule(task, 60000);
 	}
+	class TimerRunnable implements Runnable{
+		private JLabel timerLabel;
+		
+		public TimerRunnable(JLabel timerLabel) {
+			this.timerLabel=timerLabel;
+		}
+		@Override
+		public void run() {
+			int n =0;
+			while (true) {
+				timerLabel.setText(Integer.toString(n));
+				n++;
+				try {
+					Thread.sleep(1000);//1초씩 증가시키고싶으면 무조건 1000
+				} catch (InterruptedException e) {
+					// TODO: handle exception
+					return;
+				}
+			}
+		}
+		
+	}
 	
 	public void screenDraw(Graphics g) {
 		g.drawImage(background, 0, 0, null);
@@ -234,10 +263,13 @@ public class VoidEatGame extends JFrame {
 		g.setFont(new Font("Arial", Font.BOLD, 40));
 		g.drawString("SCORE : " + score, 30, 80);
 		g.drawString("TIMES:"+count,30,120);
-		
+		JLabel timerLabel = new JLabel();
+		//g.drawString("timer: "+timerLabel, 30 ,160);
 		this.repaint();
-	}
 		
+		TimerRunnable runnable = new TimerRunnable(timerLabel);
+		Thread th = new Thread(runnable);
+	}
 	public static void main(String[] args) {
 		new VoidEatGame();
 		
