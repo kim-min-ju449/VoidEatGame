@@ -15,7 +15,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JOptionPane;
 import java.awt.Container;
-
+import java.awt.FlowLayout;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -25,6 +25,8 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 /*
@@ -229,30 +231,32 @@ public class VoidEatGame extends JFrame {
 		};
 		t.schedule(task, 60000);
 	}
-	class TimerRunnable implements Runnable{
+class TimerRunnable implements Runnable{
 		private JLabel timerLabel;
 		
 		public TimerRunnable(JLabel timerLabel) {
 			this.timerLabel=timerLabel;
 		}
-		@Override
-		public void run() {
-			int n =0;
-			while (true) {
-				timerLabel.setText(Integer.toString(n));
-				n++;
-				try {
-					Thread.sleep(1000);//1초씩 증가시키고싶으면 무조건 1000
-				} catch (InterruptedException e) {
-					// TODO: handle exception
-					return;
-				}
-			}
-		}
-		
+		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        final Runnable runnable = new Runnable() {
+            int countdownStarter = 20;
+
+            public void run() {
+
+                System.out.println(countdownStarter);
+                countdownStarter--;
+
+                if (countdownStarter < 0) {
+                    System.out.println("Timer Over!");
+                    scheduler.shutdown();
+                }
+            }
+        };
+        scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+    		
 	}
-	
-	public void screenDraw(Graphics g) {
+	public void screenDraw(Graphics g) {	
 		g.drawImage(background, 0, 0, null);
 		g.drawImage(coin, coinX, coinY, null);
 		g.drawImage(coin2, coin2X, coin2Y, null);
@@ -263,7 +267,13 @@ public class VoidEatGame extends JFrame {
 		g.setFont(new Font("Arial", Font.BOLD, 40));
 		g.drawString("SCORE : " + score, 30, 80);
 		g.drawString("TIMES:"+count,30,120);
+		Container c = getContentPane();
+		c.setLayout(new FlowLayout());
+		
 		JLabel timerLabel = new JLabel();
+		timerLabel.setFont(new Font("Gothic", Font.ITALIC, 80));
+		c.add(timerLabel);
+		
 		//g.drawString("timer: "+timerLabel, 30 ,160);
 		this.repaint();
 		
